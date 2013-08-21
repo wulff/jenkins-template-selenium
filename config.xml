@@ -1,0 +1,68 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<project>
+  <actions/>
+  <description></description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <de.pellepelster.jenkins.walldisplay.WallDisplayJobProperty plugin="jenkinswalldisplay@0.6.19"/>
+  </properties>
+  <scm class="hudson.scm.NullSCM"/>
+  <canRoam>true</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers/>
+  <concurrentBuild>false</concurrentBuild>
+  <builders>
+    <EnvInjectBuilder plugin="envinject@1.88">
+      <info>
+        <propertiesContent>DISPLAY=:99</propertiesContent>
+      </info>
+    </EnvInjectBuilder>
+    <hudson.tasks.Shell>
+      <command>#!/bin/bash
+
+set -o errexit
+set -o nounset
+set -o xtrace
+
+# create output directory if it doesn&apos;t exist
+if [ -d &apos;reports&apos; ]; then
+  rm -rf reports
+fi
+mkdir -p reports
+
+# start the selenium server...
+java -jar /usr/local/lib/selenium/selenium-server.jar -trustAllSSLCertificates &amp;
+SELENIUM_PID=$!
+
+# ...and wait for it to become available
+while ! nc -vz localhost 4444; do sleep 5; done
+
+# run all selenium tests
+phpunit --log-junit reports/results.xml selenium/*.php
+
+# kill the selenium server
+kill $SELENIUM_PID</command>
+    </hudson.tasks.Shell>
+  </builders>
+  <publishers>
+    <hudson.tasks.junit.JUnitResultArchiver>
+      <testResults>reports/*.xml</testResults>
+      <keepLongStdio>false</keepLongStdio>
+      <testDataPublishers/>
+    </hudson.tasks.junit.JUnitResultArchiver>
+  </publishers>
+  <buildWrappers>
+    <org.jenkinsci.plugins.xvfb.XvfbBuildWrapper plugin="xvfb@1.0.8">
+      <installationName>Default</installationName>
+      <displayName>99</displayName>
+      <screen>1024x768x24</screen>
+      <debug>false</debug>
+      <timeout>0</timeout>
+      <displayNameOffset>1</displayNameOffset>
+      <additionalOptions></additionalOptions>
+      <shutdownWithBuild>false</shutdownWithBuild>
+    </org.jenkinsci.plugins.xvfb.XvfbBuildWrapper>
+  </buildWrappers>
+</project>
