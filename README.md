@@ -1,5 +1,5 @@
-Job: Run Seleniium tests using PHPUnit
-======================================
+Job: Run Selenium tests using PHPUnit
+=====================================
 
 Jenkins job template for creating jobs to run Selenium tests.
 
